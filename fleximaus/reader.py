@@ -3,6 +3,7 @@ reader.py
 
 """
 import numpy as np
+import pandas as pd
 
 mytest = np.arange(10,20)
 

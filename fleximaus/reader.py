@@ -1,13 +1,18 @@
 """
-reader.py
+reader.pyt
 
 """
-import numpy as np
+import glob
+import os
 import pandas as pd
+import xlrd
+import numpy as np
+from pathlib import Path
+
 
 mytest = np.arange(10,20)
 
-def TTL_reader():
+def TTL_reader(debug=False):
     """
     It reads TTL signals from channels two, containing all TTL signals from the intan file
     and match the information with the Phenosoft file.
@@ -18,11 +23,14 @@ def TTL_reader():
     Information from the INTAN file was read it from the channel 2.
     -----------------------------------------------------------------------------------------
     Input:
+    There is a debug option implemented by default set in False. To get this information type TRUE
+    e.g. TTL_reader (True)
     The file has to be open in a folder containing at two files:
     1) 'board-DIGITAL-IN-02.dat' --> INTAN file containing the TTL signals from channel 2 
     2) 'AK4801EDSS_RuleSwitch-20.06.22.csv' --> The CSV file output from Phenosoft
     ------------------------------------------------------------------------------------------
     Output:
+    When debug True will print thre trials numbers in the INTAN file and Phenossoft. Check correspondance.
     A data frame containing six columns:
     1) "Transition": name of the behavioral trial's epochs
     2) "Code" for each epoch:
@@ -82,8 +90,8 @@ def TTL_reader():
     
     # 2D. Rewriting the names of the trial epochs transitions as string
     name = mydf2['trial_seg'].astype(str)
-    names = [x.replace('\x00','').split('\t') for x in name]
-    SegTrial = list(flatten(names))
+    names = [x.replace('\x00','').split('\t') for x in name] # it outputs a list of lists
+    SegTrial = [n for sublist in names for n in sublist] # It creates a flat list of names
     
     # 2E. Creates the codes that refers to the names of the epoch trial transitions
     NameTrial = ['TIstarts','IND-CUE_pres_start','SOUND_start','resp-time-window_start',
@@ -97,8 +105,10 @@ def TTL_reader():
            
     # 2F. Reading and writing the time'epochs from a DateTime format
     date = mydf2['DataTime']
-    dates = list(flatten([x.replace('\x00','').split('\t') for x in date]))
-    dates2 = np.array(dates, dtype = float)
+    #dates = list(np.flatten([x.replace('\x00','').split('\t') for x in date])) # replaced for the following two lines
+    dates = [x.replace('\x00','').split('\t') for x in date]
+    dates_flatten = [n for sublist in dates for n in sublist] # It creates a flat list of names
+    dates2 = np.array(dates_flatten, dtype = float)
 
     # it returns date and time (hour, minute and seconds and miliseconds) from excel format
     rtd = list()
@@ -153,15 +163,16 @@ def TTL_reader():
     
     # 4 CHECKING INFORMATION 
     # 4A. Data cotaining the dime difference from the INTAN
-    print ("The sum of TTL INTAN + trial without TTL shoud be the same of Phenosoft's segments")
-    print ('number of TTL INTAN signals =',len(TTLStart))
-    print ('number of trial without TTL =',(len(*Trialstart)+ len(*Trialend)+ len(*TrialnotStopping)))
-    print ('number of segments Phenosoft =',len(SegTrial))
-    print ("Time differences should be -1 value than the vectors from which differences were taken")
-    print ('number of TTL INTAN time diff =',len(TTLstartDiff))
-    print ('number of segment Phenosoft time difference =',len(TimeEpochs))    
+    if debug:
+        print ("The sum of TTL INTAN + trial without TTL shoud be the same of Phenosoft's segments")
+        print ('number of TTL INTAN signals =',len(TTLStart))
+        print ('number of trial without TTL =',(len(*Trialstart)+ len(*Trialend)+ len(*TrialnotStopping)))
+        print ('number of segments Phenosoft =',len(SegTrial))
+        print ("Time differences should be -1 value than the vectors from which differences were taken")
+        print ('number of TTL INTAN time diff =',len(TTLstartDiff))
+        print ('number of segment Phenosoft time difference =',len(TimeEpochs))    
 
-    
+ 
     # 5. CREATE A DATA FRAME FOR EASIER DATA VISUALIZATION
     # order: name of the trial, time difference 
     preDataTTL = [SegTrial, codes, timeString, TTLmatch_ms, TTLmatch, TimeEpochs_Sec_Ms3, TTLmatchDiff2] 
@@ -170,3 +181,27 @@ def TTL_reader():
                        "TTLstartDIFF (ms)"]
     
     return DataTTL
+
+    
+def TTL_reward(debug=False):
+    """
+    Select a the spike times for the reward TTL signals 
+    The information is obtained from channel one of the digital IN of the INTAN output
+    The duration of the TTL signals are 200 ms (always!)
+    The output is a numpy array in sampling point, indicating when reward was delivered
+    """
+    # 1A. Reading file data from channel 01
+    with open('board-DIGITAL-IN-01.dat', 'rb') as fp:
+        rec_ch1 = np.fromfile(fp, np.dtype('int16')) 
+    
+    # 1B. Create a list containing 0, 1 and -1. 1 it is where the TTL start and -1 means when the TTL stops
+    diff_ch1 = [x - rec_ch1[i - 1] for i, x in enumerate(rec_ch1)][1:] 
+    diff1 = np.array(diff_ch1) # creates a np array. 
+    
+    # 1C. Define indices for the beginning and the end of the TTL signals (in an 1D array)
+    TTLStart1 = np.concatenate(np.argwhere(diff1 == 1))
+    TTLEnd1 = np.concatenate(np.argwhere(diff1 == -1))
+    if debug:
+        print("TTL average duration:","{:.2f}".format(np.mean(TTLEnd1-TTLStart1)),"+-","{:.2f}".format(np.std(TTLEnd1 - TTLStart1))) 
+    return TTLStart1
+

@@ -187,7 +187,7 @@ def TTL_reward(debug=False):
     """
     Select a the spike times for the reward TTL signals 
     The information is obtained from channel one of the digital IN of the INTAN output
-    The duration of the TTL signals are 200 ms (always!)
+    The duration of the TTL signals are 200 ms (always!)    
     The output is a numpy array in sampling point, indicating when reward was delivered
     """
     # 1A. Reading file data from channel 01
@@ -205,3 +205,93 @@ def TTL_reward(debug=False):
         print("TTL average duration:","{:.2f}".format(np.mean(TTLEnd1-TTLStart1)),"+-","{:.2f}".format(np.std(TTLEnd1 - TTLStart1))) 
     return TTLStart1
 
+
+def epochs(exp, debug = False):
+    """
+    Its divide the behavioral test in four trials types:
+    1) correct, incorrect, Non-responded and No-initialized
+    2) identify whenthe first and second rule start
+    Debug option is by default False. When It is True the output should be:
+    True/True/True/True. If something False, check the files
+    
+    Epoch's trial Codes: 
+    1 =TIstarts/ 2 =IND-CUE_pres_start/ 3 =SOUND_start/ 4 =resp-time-window_start/
+    5 =ewPERIODstart/ 6 =PRPstarts/ 7 =TimeOUTstarts/ 8 =ITIstarts/ 9 =NOresponse/
+    10 =start/ 11 =wheelISnotSTOPPING/ 12 =end.
+    
+    Trials
+    I: Correct trials --> 1,2,3,4,5,6,8 (lenght = 7)                        
+    II: Incorrect trials --> 1,2,3,4,5,6,7,8 (lenght = 8) 
+    III: Non responded trial --> 1,2,3,4,9,8 (lenght = 6) 
+    IV: Trial not initialized --> 1, 11 (lenght = 2) 
+    Rule 1 --> 10 to 10
+    Rule 2 --> 10 to 12
+    ----------------------------------------------------------
+    Input
+    exp = a dataframe containing the information of an experiment 
+          Use the reader.TTL_reader() 
+    e.g = Trials, epochs_s = epochs(exp1)
+    -----------------------------------------------------------
+    It returns
+    Two dictionaries
+    1) Index for each epoch stats for the INTAN file
+    2) Tuples in sampling point for the INTAN file
+          
+    """
+    # 1. Defining the duration of each trial
+    CorrT = [1,2,3,4,5,6,8]
+    InCorrT = [1,2,3,4,5,6,7,8]
+    NoRespT = [1,2,3,4,9,8]
+    NoInitT = [1,11]
+    Seg = [CorrT,InCorrT,NoRespT,NoInitT]
+
+    # 2. Getting the index from each trial starts.
+    startT = np.concatenate(np.where(exp['Code'] == 10)) # It gives the start index for each rule
+    SecondRule = startT[1]+1 # It gets the index for the first trial of the second rule
+    endT = np.concatenate(np.where(exp['Code'] == 12)) # It outputs when the Behavioral test stop
+
+    # 3. Trial types will be identified according to their lenght
+    initT =  np.concatenate(np.where(exp['Code'] == 1)) #It gives the beginning of each trial
+    allTrial = np.concatenate([initT,endT]) # include teh end trial to calculate the lengh of the last trial
+    initDiff = np.diff(allTrial) # It gives the code for each trial duration
+
+    # 4. Important --> to consider the start trial and substract this value to the last epoch of the first rule
+    SecondRule = startT[1]+1 # Fisrt trial of the second rule
+    idx = np.concatenate(np.where(initT == SecondRule)) # it gives the value when the second rule starts
+    initDiff [idx[0] - 1] = initDiff [idx[0] - 1] - 1 # substract 1 to the last trial in the Rule 1
+    
+    # 5. It gives in index of the beginning of the trials
+    Trial_idx = [len(i) for i in Seg]  # It gives the lenght of the trials
+    Initrials = dict()
+    for i in Trial_idx:
+        for a,b in zip (initT,initDiff):
+            if b == i:
+                Initrials.setdefault(i,[]).append(a)
+    #Changing name of the keys
+    IniTrials_idx = dict(zip(['Correct','InCorrect','NoResp','NoInit'], list(Initrials.values()))) 
+                
+    # 6. It return a tuple with the sampling point for the beginning and end of the epochs
+    epochs_sp = dict()
+    for epoch in Trial_idx:
+        for ini,diff in zip (initT,initDiff):
+            if diff == epoch:
+                epochend = ini + epoch 
+                epochs_sp.setdefault(epoch,[]).append((exp.iloc[ini][4], exp.iloc[epochend][4])) # 4 th column
+    
+    #Changing name of the keys
+    epochs_s = dict(zip(['Correct','InCorrect','NoResp','NoInit'], list(epochs_sp.values())))
+    
+    # testing correct clasifitication of the trials
+    if debug:
+        print('Incorrect trials:',len(np.concatenate(np.where(exp['Transition'] == 
+                            'TimeOUTstarts'))) == len(Initrials[Trial_idx[1]]))
+        print ('NoResp trials:',len(np.concatenate(np.where(exp['Transition'] == 
+                            'NOresponse'))) == len(Initrials[Trial_idx[2]]))
+        print('NoInit trials:',len(np.concatenate(np.where(exp['Transition'] == 
+                            'wheelISnotSTOPPING'))) == len(Initrials[Trial_idx[3]]))
+        print('Correct trials:',len(initT) - (len(Initrials[Trial_idx[1]]) + 
+              len(Initrials[Trial_idx[2]]) + 
+              len(Initrials[Trial_idx[3]])) == len(Initrials[Trial_idx[0]]))
+
+    
+    return (IniTrials_idx, epochs_s)

@@ -295,3 +295,67 @@ def epochs(exp, debug = False):
 
     
     return (IniTrials_idx, epochs_s)
+    
+    
+class ClusterReader(object):
+    """
+    Read the cluster_info.tsv
+    Output a data frame containing the information of only good units
+    """
+    def __init__(self, mydir = "./"):
+        """
+        Loads cluster_info from directory
+        
+        Arguments:
+        mydir: (str) thta indicate the directory of the file cluster_info.tsv
+                (ouput directoty from Phy)
+        quality: (str) There are three possibles values from the clustering procedure.
+                 Good is the default values. The other two are: mua and noise.
+        
+        Output:
+        A data frame with the information of the "good"clusters. 
+        Optional is to retrieve the information of mua and noisy clusters. 
+        """
+        myfile = Path(mydir, 'cluster_info.tsv')
+        self.df = pd.read_csv(myfile, sep = '\t', index_col='id')
+        mydf = self.df # it retrives all teh information
+        self.good = mydf[mydf.group== 'good'] 
+        self.mua = mydf[mydf.group== 'mua']
+        self.noise = mydf[mydf.group== 'noise']
+    
+    
+    def clust_time(self, mydir = "./"):
+        """
+        Returns a dictionary with clusters and spikes times from good clusters. 
+        It reads the output files from Phy:
+        'spike_times.npy' and 'spike_clusters.npy'
+    
+        Arguments:
+        ---------------
+        pmydir = indicate the path where the file is located. e.g. 'sorting/clustering/'
+    
+        Example: 
+        Use ClusterReader to get index:
+        1. Myunits = myunit.clust_time(mydir = 'sorting\clustering')
+        2. good_idx = myunit.good.index          
+        """  
+        # Recognize the name's file
+        fspk = Path (mydir,'spike_times.npy') # file containig the spike times
+        fcls = Path (mydir,'spike_clusters.npy') # file containing the clusters 
+    
+        # Data containing the spike information: fisrt the times, the the clusters
+        spk_time = np.load(fspk).flatten() # read the spike times files as numpy array
+        spk_clust = np.load(fcls) # read the spikes cluster as numpy array
+    
+        # Creates a dictionary that store all the index for each good cluster
+        cluster_idx = dict()
+        idx = self.good.index
+        for clust in idx:
+            cluster_idx [clust] = np.where(spk_clust == clust)
+    
+        # It creates a dictionary with all the clusters containing the spike times
+        cluster_times = dict()
+        for key,value in cluster_idx.items():
+            cluster_times[key] = spk_time[value]
+        
+        return (cluster_times) 

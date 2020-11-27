@@ -26,7 +26,7 @@ pip install -r requirements.txt
 pip install -e .
 ```
 
-## License [![GitHub license](https://img.shields.io/github/license/ClaudiaEsp/fleximaus)](https://github.com/ClaudiaEsp/fleximaus/blob/master/LICENSE)
+## License [![GitHub license](https://img.shields.io/github/license/ClaudiaEsp/fleximaus)](https://github.com/ClaudiaEsp/fleximaus/blob/main/LICENSE)
 
 Fleximaus is free software. You can redistribute it and modify it under the terms of the GNU General Public License (GPL), either version 2 of the License, or any later version as published by the Free Software Foundation.
 

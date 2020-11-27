@@ -1,5 +1,5 @@
 # fleximaus
-A Python module to analyze electrical signals and behavior in amice behaving in a cognitive flexibility task. For personal use only.
+A Python module to analyze electrical signals and behavior in mice to study cognitive flexibility. For personal use only.
 Requirements
 
 

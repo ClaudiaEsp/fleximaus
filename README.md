@@ -17,6 +17,9 @@ How to install it
 To download and install the fleximaus package:
 
 git clone https://github.com/ClaudiaEsp/fleximaus.git
+
 cd fleximaus
+
 pip install -r requirements.txt
+
 pip install -e .

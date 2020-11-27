@@ -1,6 +1,27 @@
 """
 reader.pyt
+Claudia Espinoza, claudia.espinoza@meduniwien.ac.at
 
+Last modifcation: 4:38 PM 11/27/2020
+
+1. Contains functions for reading TTl from the behavioral task 
+2. Contains a class to load binary files recorded with Open Ephys
+
+Example:
+>>> from fleximaus import reader as rd
+>>> myexp = rd.TTL_reader() --> Loading a general TTL reder with the INTAN and Phenosoft info
+
+#2. Loading the reader of the TTL rewards
+>>> reward = rd.TTL_reward()
+
+#3. Loading the trials epochs classifier: correct, incorrect responded and non responded, not initialized
+>>> Init_trials, Trial_epoch = rd.epochs(myexp)
+
+#4. Reading info from clusters (reading Phy output)
+>>> clustersInfo = rd.ClusterReader(mydir = 'sorting\clustering')
+
+#5. Loading spike times only from good clusters
+>>> myClustspk = clustersInfo.clust_time()
 """
 import glob
 import os

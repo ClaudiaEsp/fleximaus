@@ -299,23 +299,30 @@ def epochs(exp, debug = False):
     
 class ClusterReader(object):
     """
-    Read the cluster_info.tsv
+    It allows to read the clustered activity from Phy files.
     Output a data frame containing the information of only good units
     """
     def __init__(self, mydir = "./"):
         """
-        Loads cluster_info from directory
-        
+        Loads and reads cluster_info.tsv from directory.
+        Use:
+        from fleximaus import reader as rd
+        myclusters = rd.ClusterReader(mydir = 'sorting\clustering')
+        myclusters.df
+        _______________________________________________________________
         Arguments:
-        mydir: (str) thta indicate the directory of the file cluster_info.tsv
+        mydir: (str) indicates the directory of the file cluster_info.tsv
                 (ouput directoty from Phy)
-        quality: (str) There are three possibles values from the clustering procedure.
-                 Good is the default values. The other two are: mua and noise.
-        
+       
         Output:
-        A data frame with the information of the "good"clusters. 
-        Optional is to retrieve the information of mua and noisy clusters. 
+        
+        myfile.df = the whole information of the cluster info (includind
+        good, noise and mua clusters)
+        myfile.good = retrieves the information of good clusters
+        this information is also available for mua (myfile.mua) and noise
+        myfile.noise 
         """
+        self.mydir = mydir
         myfile = Path(mydir, 'cluster_info.tsv')
         self.df = pd.read_csv(myfile, sep = '\t', index_col='id')
         mydf = self.df # it retrives all teh information
@@ -324,24 +331,22 @@ class ClusterReader(object):
         self.noise = mydf[mydf.group== 'noise']
     
     
-    def clust_time(self, mydir = "./"):
+    def clust_time(self):
         """
-        Returns a dictionary with clusters and spikes times from good clusters. 
+        Returns a dictionary from ONLY GOOD clusters and spikes times. 
         It reads the output files from Phy:
         'spike_times.npy' and 'spike_clusters.npy'
     
         Arguments:
-        ---------------
-        pmydir = indicate the path where the file is located. e.g. 'sorting/clustering/'
-    
+        ---------------    
         Example: 
         Use ClusterReader to get index:
         1. Myunits = myunit.clust_time(mydir = 'sorting\clustering')
         2. good_idx = myunit.good.index          
         """  
         # Recognize the name's file
-        fspk = Path (mydir,'spike_times.npy') # file containig the spike times
-        fcls = Path (mydir,'spike_clusters.npy') # file containing the clusters 
+        fspk = Path (self.mydir,'spike_times.npy') # file containig the spike times
+        fcls = Path (self.mydir,'spike_clusters.npy') # file containing the clusters 
     
         # Data containing the spike information: fisrt the times, the the clusters
         spk_time = np.load(fspk).flatten() # read the spike times files as numpy array

@@ -206,9 +206,9 @@ def TTL_reader(debug=False):
     
 def TTL_reward(debug=False):
     """
-    Select a the spike times for the reward TTL signals 
+    Select the times for the reward TTL signals 
     The information is obtained from channel one of the digital IN of the INTAN output
-    The duration of the TTL signals are 200 ms (always!)    
+    The duration of the TTL signals is 200 ms (always!)    
     The output is a numpy array in sampling point, indicating when reward was delivered
     """
     # 1A. Reading file data from channel 01

@@ -15,6 +15,9 @@ Example:
 >>> myexp = us.SpikeFilter() --> Classify the spikes of a single cluster according to a specific stimuli
 
 """
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
 
 def isis(spike_times, neuron_idx):
     """
@@ -143,6 +146,6 @@ class SpikeFilter(object):
         ax[2].set_ylabel('FR');
         ax[2].set_xlabel('Time (s)');
         
-        plt.savefig('Cluster20.pdf')
+        #plt.savefig('Cluster20.pdf')
         
         plt.show()

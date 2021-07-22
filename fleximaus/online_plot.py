@@ -21,7 +21,7 @@ To finish running the script, press "Esc" in the console (or python kernel)
 ## 1. Importing information
 
 plt.ion() # plt in interactive mode
-
+cwd = os.getcwd()
 #path = 'C:\\maxland\\maxland_TRAINING01\\experiments\\confidentiality_task\\setups\\confidentiality_task_training_simple\\sessions\\'
 path = 'C:\\maxland\\experiments\\confidentiality_task\\setups\\habituation_complex\\sessions'
 folder = '20210721-112902'
@@ -179,6 +179,7 @@ fig.subplots_adjust(hspace=0.6)
 while True:
     if msvcrt.kbhit() and msvcrt.getch() == chr(27).encode(): # Esc key cancel the plot
         print('Plot cancelled!')
+        os.chdir(cwd)
         break
     else:
         time.sleep(2)
@@ -203,8 +204,8 @@ while True:
         #mycolor +=1      
             ax[1,0].fill_between(x, corr_update/n_trials, color = 'blue', alpha = 0.3); # plot correct response 'f'C{mycolor}'
             ax[0,0].fill_between(x, resp_update/n_trials, color = "red", alpha = 0.3); # plot responded trials 
-            ax[0,1].fill_between(x, right_update/n_trials, color =  "#e97854", alpha = 0.3); # plot right choices (correct or incorrect) "#e97854"
-            ax[1,1].fill_between(x, maxcorr_update/n_trials, color ="purple", alpha = 0.3);# plot maximum correct responses, "purple"   
+            ax[0,1].fill_between(x, right_update/n_trials, color =  "#e97854", alpha = 0.3); # plot right choices (correct/incorrect)
+            ax[1,1].fill_between(x, maxcorr_update/n_trials, color ="purple", alpha = 0.3);# plot maximum correct responses.   
             plotstyle(x = x);
         
             print('Number of trials:', (n_trials+len(x)), 'water consumption (ml):', new_trial_info["corr"]*reward) # forn trials also itrials

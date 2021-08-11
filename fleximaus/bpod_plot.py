@@ -4,36 +4,40 @@ import matplotlib.pyplot as plt
 import time
 import os
 import msvcrt
+import glob
+
 """"
 This Script plot behavioral information from the csv file output from PyBpod for the flexibility project. 
-To run the script set (e.g.):
-- path = 'C:\\_work_cespinoza\\Analyses\\Behavior\\TestPyBpod\\training_simple\\'
-- folder = '20210702-144506'
-The output:
-Correspond to four plots: right-side choices, maximum correct achieved, correct responses and
-responded trials. By default it uses data from the last 10 trials. This can be modified in "n_trials"
+To read the file the path is automatically set to: = C:\\maxland\\experiments'
+The file is saved in a folder with the same same, e.g. folder = '20210702-144506'
 
-Important: after using the script the path in the python kernel is changed. 
-Restart python to run again this script
+Output
+Four plots: right-side choices, maximum correct achieved, correct responses and
+responded trials. By default it uses data from the last 20 trials. This can be modified in "n_trials"
+
 To finish running the script, press "Esc" in the console (or python kernel)
 """""
-
-## 1. Importing information
-
 plt.ion() # plt in interactive mode
-cwd = os.getcwd()
+cwd = os.getcwd() # save current working directory, where the script is saved
 
-#path = 'C:\\maxland\\maxland_TRAINING01\\experiments\\confidentiality_task\\setups\\confidentiality_task_training_simple\\sessions\\'
-path = 'C:\\maxland\\experiments\\confidentiality_task\\setups\\habituation_complex\\sessions'
-#path = 'C:\\maxland\\experiments\\confidentiality_task\\setups\\habituation_simple\\sessions'
-folder = '20210810-113702'
-fname = folder + ".csv"
-os.chdir(os.path.join(path,folder))
+path = 'C:\\maxland\\experiments' # path to the data to find the last created file
+os.chdir(path) # set the new path
 
+## 1. Setting the path to the file thta we want to plot
+# find the last csv file that was created
+csvfiles_path = glob.glob('**\*.csv', recursive = True) 
+lastfile = max(csvfiles_path, key = os.path.getctime)
+os.chdir(os.path.join(path, lastfile[:-20])) # change the path to the file to plot
+
+folder = lastfile[-19:-4] # folder where the file os located
+fname = lastfile[-19:] # name of the file with the csv extension
+
+## 2. Additional information that it can be modified for the printed plot
 n_trials = 20 # number o f trials to convolve the data
 reward = 0.015 # amoun of water in each trial. It was calculated to get 1 ml in 100 correct trials.
 
-### 2. Defining functions for organizing data ###
+
+### 3. Defining functions for organizing data ###
 def dic_counter(msg):
     """
     It counts General info trials: n trials, n correct, n incorrect, n not responded, n wheel not stopping
@@ -173,12 +177,12 @@ def plotstyle(x):
        
     return(ax)
     
-## 3. ploting fig ##
+## 4. ploting the data
 fig,ax = plt.subplots(2, 2, figsize = (9,4), sharey = True)
 fig.set_tight_layout(False)
 fig.subplots_adjust(hspace=0.6)
 
-#mycolor = 0
+#mycolor = 0 # this value is used to test the script without data
 while True:
     if msvcrt.kbhit() and msvcrt.getch() == chr(27).encode(): # Esc key cancel the plot
         print('Plot cancelled!')
@@ -204,7 +208,7 @@ while True:
             for myax in ax.flatten():
                 myax.clear()
             
-        #mycolor +=1      
+        #mycolor +=1 # this value is used to test the script without data     
             ax[1,0].fill_between(x, corr_update/n_trials, color = 'blue', alpha = 0.3); # plot correct response 'f'C{mycolor}'
             ax[0,0].fill_between(x, resp_update/n_trials, color = "red", alpha = 0.3); # plot responded trials 
             ax[0,1].fill_between(x, right_update/n_trials, color =  "#e97854", alpha = 0.3); # plot right choices (correct or incorrect) "#e97854"

@@ -38,6 +38,14 @@ reward = 0.015 # amoun of water in each trial. It was calculated to get 1 ml in 
 
 
 ### 3. Defining functions for organizing data ###
+def sessioninfo():
+    """
+    return general information of the session
+    """
+    gralinfo = pd.read_csv(fname, sep = ';',skiprows = 7, usecols=[4,5], nrows=14, names=["Msg", "Info"])
+    return (gralinfo) 
+
+
 def dic_counter(msg):
     """
     It counts General info trials: n trials, n correct, n incorrect, n not responded, n wheel not stopping
@@ -154,7 +162,11 @@ def plotstyle(x):
     """
     Set the values of the axes of a plot object
     """
-    fig.suptitle('{}'.format(folder))
+    gralinfo =sessioninfo()
+    fig.suptitle('{}'.format(gralinfo.iloc[12,0])+"="+ '{}'.format(gralinfo.iloc[12,1])+'\n'
+    '{}'.format(gralinfo.iloc[6,0])+"="+'{}'.format(gralinfo.iloc[6,1])+'\n'
+    '{}'.format(gralinfo.iloc[9,0])+"="+'{}'.format(gralinfo.iloc[9,1][2:6])+'\n', horizontalalignment ='center')
+
     ax[0,0].text(max(x)*0.45, 1.1, 'Response', color ="red", fontsize =14);
     ax[0,0].set_ylabel('Proportion', fontsize =14);
     ax[0,0].axhline(y=0.85, xmin=0, xmax=len(x), color ='r', ls = '-.', lw = 0.4);
@@ -170,6 +182,13 @@ def plotstyle(x):
     ax[1,1].set_xlabel('Trials', fontsize =14);
     ax[1,1].text(max(x)*0.45, 1.1, 'Maximum Correct', color ="purple", fontsize =14);
     ax[1,1].axhline(y=0.85, xmin=0, xmax=len(x), color ='r', ls = '-.', lw = 0.4);
+    
+    # Adding some text to the plot
+    t = ('Total trials:'+'{}'.format((n_trials+len(x)))+'\n'
+         'Correct trials:'+'{}'.format(new_trial_info["corr"])+'\n'
+         'No responded trials:'+'{}'.format(new_trial_info["noresp"])+'\n'
+         'N Convolved trials:'+ '{}'.format(n_trials))
+    fig.text(0.91,0.2, t, backgroundcolor = 'white')
     
     for myax in ax.flatten():
         myax.set(ylim = (0,1.0))

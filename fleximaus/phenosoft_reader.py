@@ -1,15 +1,15 @@
 """
-reader.pyt
+reader_pheno.pyt
 Claudia Espinoza, claudia.espinoza@meduniwien.ac.at
 
 Last modifcation: 4:38 PM 11/27/2020
 
-1. Contains functions for reading TTl from the behavioral task 
-2. Contains a class to load binary files recorded with Open Ephys
+1. Contains functions for reading TTl from the Phenosoft behavioral task 
+2. Contains a class to load binary files recorded with INTAN
 
 Example:
 >>> from fleximaus import reader as rd
->>> myexp = rd.TTL_reader() --> Loading a general TTL reder with the INTAN and Phenosoft info
+>>> myexp = rd.TTL_reader() --> Loading a general TTL reder with the INTAN and PHENOSOFT info
 
 #2. Loading the reader of the TTL rewards
 >>> reward = rd.TTL_reward()

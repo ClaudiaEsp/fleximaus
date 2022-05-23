@@ -12,7 +12,9 @@ import json
 class Infos():
     '''
     It gets gral information of a single training sessions. 
-    It reads the csv and the 
+    It reads the csv and json file outputs from a Pybpod session
+    It allows to obtain side preference, response time, etc
+    Json contains information to check the insistive mode active, and where the correct object was presented
     '''
  
     cwd = os.getcwd()
@@ -174,7 +176,6 @@ class Infos():
                 mycorr.append(0) # incorrect trials
             
         mycorr = np.array(mycorr)
-        #corr_trials = np.convolve(mycorr,np.ones(convtrials,dtype=int),'valid')
         return mycorr
     
     def resp_organizer(self):

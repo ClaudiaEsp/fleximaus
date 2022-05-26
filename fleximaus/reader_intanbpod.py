@@ -67,8 +67,7 @@ class Trials_info():
         self.loadjson = open(self.jsonname,)
         self.jsondata = json.load(self.loadjson) # returns JSON object as a dictionary
         
-        # Opening a intan file with ttl signals (digitalin.dat)
-        
+        # Opening a intan file with ttl signals (digitalin.dat)  
         with open('digitalin.dat', 'rb') as fp:
             self.rec_ch = np.fromfile(fp, np.dtype('uint16')) # will transform to 16-bit integers 
         
@@ -171,7 +170,8 @@ class Trials_info():
         # 3. Indexing correct and incorrect trials to create an array with the information 
         ## 3.1. Indexing correct trials (right and left choices)
         idx_correct =  np.where((nmydf['Msg'] == 'reward_right') | (nmydf['Msg'] == 'reward_left'))[0]
-        whole_cor = [vals for idx in idx_correct for vals in list(range(idx-3,idx+3))] # correct trials have 6 indexes from stim presentation to end
+        # correct trials have 6 indexes from stim presentation to end
+        whole_cor = [vals for idx in idx_correct for vals in list(range(idx-3,idx+3))] 
        
         ## 3.2. Indexing incorrect trial (right and left choices)
         idx_incorrect = np.where((nmydf['Msg'] == 'no_reward_right') | (nmydf['Msg'] == 'no_reward_left'))[0]
@@ -258,12 +258,24 @@ class Trials_info():
         
         ## 8. INTAN FILE
         # 8.1 Trasform the binary data from intan 
-        dg0 = self.binreader(data = self.rec_ch, ch = self.BNC2) # BNC 2
-        dg1 = self.binreader(data = self.rec_ch, ch = self.BNC1) # BNC 1
+        dg0 = self.binreader(ch = self.BNC2) # BNC 2
+        dg1 = self.binreader(ch = self.BNC1) # BNC 1
         
         # 8.2 Tranform previous values in ttl signals 0, on and -1 when the ttl is on and 1 when it is off.
-        ttl0 = np.diff(dg0) # BNC 2
+        mttl0 = np.diff(dg0) # BNC 2
         ttl1 = np.diff(dg1) # BNC 1
+        
+        # 2.3 Correct for mistmatch
+        mistmatch =np.array([i for i,b in enumerate(zip(ttl1, mttl0)) if ttl1[i] == 1 and mttl0[i+1] == 1]) # TTL en-off not matched
+        
+        if mistmatch.size == 0:
+            ttl0 = mttl0.copy()
+            #print("not correct for mistmatch")
+        else:
+            ttl0 = mttl0.copy()
+            ttl0[mistmatch] = 1 # replace the point of mistmatch by one
+            ttl0[mistmatch+1] = 0 # set to 0 the previous point
+            #print("mistmatch corrected")
         
         # 8.3 Getting speific times from INTAN
         # Getting reward periods from INTAN file
@@ -354,5 +366,19 @@ class Trials_info():
         
         return df_Clustimes
     
-    
+    def binreader(self, ch:int, data = None):
+        """
+        It reads the TTL signal from PyBpod to INTAN file to obtain 
+        Rotary encoder: intan channels (ch) 0,1 and BNC1 and BNC2: positions 4,5.
+        For more explanation check notion page: Lab\seccion Analysis and Methods\Organization analyzes Behavior\
+        (reading binary data by using 2**1, 2**2, 2**3, etc)
+        Input: file as np.dtype('uint16') with the information from e.g.: 'digitalin.dat'
+        output
+        """
+        if data is None:
+            data = self.rec_ch
+        
+        # int allows logical comparison with 0 (1-0 instead true and false)
+        digital_channel = list(map( lambda x: int((x & (2** ch)) > 0 ), data)) 
+        return(np.array(digital_channel))
     
